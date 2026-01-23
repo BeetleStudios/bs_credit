@@ -1,32 +1,33 @@
 -- Command handler function (defined early so RegisterCommand can use it)
 local function HandleCreditReportCommand(source, args, rawCommand)
-    print('^3[ns-credit]^7 Command executed by source: ' .. source)
-    
     local player = exports.qbx_core:GetPlayer(source)
     if not player then 
-        print('^1[ns-credit]^7 Error: Player not found for source: ' .. source)
         return 
     end
     
-    -- Job check removed for testing
-    -- local playerJob = player.PlayerData.job
-    -- print('^3[ns-credit]^7 Player job: ' .. (playerJob and playerJob.name or 'nil') .. ', Required: ' .. Config.BankerJob)
-    -- 
-    -- if not playerJob or playerJob.name ~= Config.BankerJob then
-    --     lib.notify(source, {
-    --         title = 'Access Denied',
-    --         description = 'You must be a banker to use this command. Your job: ' .. (playerJob and playerJob.name or 'none'),
-    --         type = 'error'
-    --     })
-    --     return
-    -- end
+    -- Check if player has banker job
+    local playerJob = player.PlayerData.job
     
-    print('^2[ns-credit]^7 Access granted, triggering client event')
+    if not playerJob or playerJob.name ~= Config.BankerJob then
+        if lib then
+            lib.notify(source, {
+                title = 'Access Denied',
+                description = 'You must be a banker to use this command. Your job: ' .. (playerJob and playerJob.name or 'none'),
+                type = 'error'
+            })
+        else
+            TriggerClientEvent('chat:addMessage', source, {
+                color = {255, 0, 0},
+                multiline = true,
+                args = {'System', 'You must be a banker to use this command.'}
+            })
+        end
+        return
+    end
     
     -- Parse citizenid from args (support both formats)
     local citizenid = nil
     if args and type(args) == 'table' then
-        print('^3[ns-credit]^7 Args table: ' .. json.encode(args))
         if args.citizenid then
             citizenid = args.citizenid
         elseif args[1] then
@@ -34,13 +35,8 @@ local function HandleCreditReportCommand(source, args, rawCommand)
         end
     end
     
-    print('^3[ns-credit]^7 Parsed citizenid: ' .. (citizenid or 'nil'))
-    print('^3[ns-credit]^7 Triggering client event to source: ' .. source)
-    
     -- If citizenid provided, use it; otherwise client will prompt
     TriggerClientEvent('ns-credit:client:openCreditReport', source, citizenid)
-    
-    print('^2[ns-credit]^7 Client event triggered')
 end
 
 -- Helper function to get or create credit score
@@ -253,9 +249,12 @@ end
 
 -- Register commands immediately using RegisterCommand (doesn't need lib)
 RegisterCommand('creditreport', HandleCreditReportCommand, false)
-RegisterCommand('addcredit', HandleAddCreditCommand, false)
-RegisterCommand('reducecredit', HandleReduceCreditCommand, false)
-print('^2[ns-credit]^7 Commands registered via RegisterCommand')
+
+-- Only register addcredit and reducecredit if enabled in config
+if Config.EnableCreditCommands then
+    RegisterCommand('addcredit', HandleAddCreditCommand, false)
+    RegisterCommand('reducecredit', HandleReduceCreditCommand, false)
+end
 
 -- Wait for lib to be available
 CreateThread(function()
@@ -289,10 +288,7 @@ CreateThread(function()
 
     -- Get full credit report (for UI)
     lib.callback.register('ns-credit:server:getCreditReport', function(source, citizenid)
-        print('^3[ns-credit]^7 Callback received from source: ' .. source .. ', citizenid: ' .. (citizenid or 'nil'))
-        
         if not citizenid or citizenid == '' then
-            print('^1[ns-credit]^7 Error: No citizenid provided')
             lib.notify(source, {
                 title = 'Error',
                 description = 'No citizen ID provided.',
@@ -303,33 +299,28 @@ CreateThread(function()
         
         local player = exports.qbx_core:GetPlayer(source)
         if not player then
-            print('^1[ns-credit]^7 Error: Player not found for source: ' .. source)
             return nil
         end
         
-        -- Job check removed for testing
-        -- local playerJob = player.PlayerData.job
-        -- if not playerJob or playerJob.name ~= Config.BankerJob then
-        --     lib.notify(source, {
-        --         title = 'Access Denied',
-        --         description = 'You must be a banker to access credit reports.',
-        --         type = 'error'
-        --     })
-        --     return nil
-        -- end
-        
-        print('^3[ns-credit]^7 Looking up player with citizenid: ' .. citizenid)
+        -- Check if player has banker job
+        local playerJob = player.PlayerData.job
+        if not playerJob or playerJob.name ~= Config.BankerJob then
+            lib.notify(source, {
+                title = 'Access Denied',
+                description = 'You must be a banker to access credit reports.',
+                type = 'error'
+            })
+            return nil
+        end
         
         -- Get player data by citizenid
         local targetPlayer = exports.qbx_core:GetPlayerByCitizenId(citizenid)
         local offlinePlayer = nil
         
         if not targetPlayer then
-            print('^3[ns-credit]^7 Player not online, trying offline player')
             -- Try to get offline player
             offlinePlayer = exports.qbx_core:GetOfflinePlayer(citizenid)
             if not offlinePlayer then
-                print('^1[ns-credit]^7 Error: Player not found (online or offline)')
                 lib.notify(source, {
                     title = 'Error',
                     description = 'Player not found with citizen ID: ' .. citizenid,
@@ -337,13 +328,9 @@ CreateThread(function()
                 })
                 return nil
             end
-            print('^2[ns-credit]^7 Found offline player')
-        else
-            print('^2[ns-credit]^7 Found online player')
         end
         
         local playerData = targetPlayer and targetPlayer.PlayerData or offlinePlayer.PlayerData
-        print('^3[ns-credit]^7 Getting credit data for: ' .. citizenid)
         local creditData = GetOrCreateCreditScore(citizenid)
         local creditHistory = GetCreditHistory(citizenid, 50)
         
@@ -370,7 +357,6 @@ CreateThread(function()
             end
         end
         
-        print('^2[ns-credit]^7 Returning credit report data')
         return {
             citizenid = citizenid,
             firstname = playerData.charinfo.firstname or 'Unknown',
@@ -397,55 +383,56 @@ CreateThread(function()
         }
     }, HandleCreditReportCommand)
     
-    lib.addCommand('addcredit', {
-        help = 'Add credit score to a player',
-        params = {
-            {
-                name = 'citizenid',
-                type = 'string',
-                help = 'Citizen ID of the player',
-                required = true
-            },
-            {
-                name = 'amount',
-                type = 'number',
-                help = 'Amount of credit to add',
-                required = true
-            },
-            {
-                name = 'description',
-                type = 'string',
-                help = 'Description for the credit change (optional)',
-                required = false
+    -- Only register addcredit and reducecredit if enabled in config
+    if Config.EnableCreditCommands then
+        lib.addCommand('addcredit', {
+            help = 'Add credit score to a player',
+            params = {
+                {
+                    name = 'citizenid',
+                    type = 'string',
+                    help = 'Citizen ID of the player',
+                    required = true
+                },
+                {
+                    name = 'amount',
+                    type = 'number',
+                    help = 'Amount of credit to add',
+                    required = true
+                },
+                {
+                    name = 'description',
+                    type = 'string',
+                    help = 'Description for the credit change (optional)',
+                    required = false
+                }
             }
-        }
-    }, HandleAddCreditCommand)
-    
-    lib.addCommand('reducecredit', {
-        help = 'Reduce credit score from a player',
-        params = {
-            {
-                name = 'citizenid',
-                type = 'string',
-                help = 'Citizen ID of the player',
-                required = true
-            },
-            {
-                name = 'amount',
-                type = 'number',
-                help = 'Amount of credit to reduce',
-                required = true
-            },
-            {
-                name = 'description',
-                type = 'string',
-                help = 'Description for the credit change (optional)',
-                required = false
+        }, HandleAddCreditCommand)
+        
+        lib.addCommand('reducecredit', {
+            help = 'Reduce credit score from a player',
+            params = {
+                {
+                    name = 'citizenid',
+                    type = 'string',
+                    help = 'Citizen ID of the player',
+                    required = true
+                },
+                {
+                    name = 'amount',
+                    type = 'number',
+                    help = 'Amount of credit to reduce',
+                    required = true
+                },
+                {
+                    name = 'description',
+                    type = 'string',
+                    help = 'Description for the credit change (optional)',
+                    required = false
+                }
             }
-        }
-    }, HandleReduceCreditCommand)
-    
-    print('^2[ns-credit]^7 All commands also registered via lib.addCommand')
+        }, HandleReduceCreditCommand)
+    end
 end)
 
 -- Export: Get Credit Score

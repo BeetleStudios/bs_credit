@@ -11,16 +11,10 @@ CreateThread(function()
         Wait(100)
         attempts = attempts + 1
         if attempts > 100 then -- 10 seconds
-            print('^1[ns-credit]^7 ERROR: ox_lib not available after 10 seconds!')
-            print('^1[ns-credit]^7 Make sure ox_lib is started before ns-credit in server.cfg')
             return
         end
     end
-    print('^2[ns-credit]^7 Client: lib is available')
 end)
-
--- Register event immediately (before waiting for lib)
-print('^2[ns-credit]^7 Client: Script loaded, registering event handler')
 
 -- Function to format currency
 local function FormatCurrency(amount)
@@ -189,28 +183,19 @@ end
 
 -- Event to open credit report
 RegisterNetEvent('ns-credit:client:openCreditReport', function(citizenid)
-    print('^2[ns-credit]^7 ===== CLIENT EVENT RECEIVED =====')
-    print('^3[ns-credit]^7 Client event received, citizenid: ' .. (citizenid or 'nil'))
-    
     -- Wait for lib to be available (should already be available, but double-check)
     if not lib then
-        print('^3[ns-credit]^7 Waiting for lib...')
         local libWaitCount = 0
         while not lib do
             Wait(100)
             libWaitCount = libWaitCount + 1
             if libWaitCount > 50 then
-                print('^1[ns-credit]^7 ERROR: lib not available after 5 seconds!')
-                print('^1[ns-credit]^7 Make sure ox_lib is started and loaded properly')
                 return
             end
         end
     end
     
-    print('^2[ns-credit]^7 Lib is available')
-    
     if not citizenid or citizenid == '' then
-        print('^3[ns-credit]^7 No citizenid provided, showing input dialog')
         -- Ask for citizenid if not provided
         local input = lib.inputDialog('Credit Report', {
             {
@@ -223,25 +208,18 @@ RegisterNetEvent('ns-credit:client:openCreditReport', function(citizenid)
         })
         
         if not input or not input[1] or input[1] == '' then
-            print('^1[ns-credit]^7 User cancelled input dialog or entered empty value')
             return
         end
         
         citizenid = input[1]
-        print('^3[ns-credit]^7 User entered citizenid: ' .. citizenid)
-    else
-        print('^3[ns-credit]^7 Using provided citizenid: ' .. citizenid)
     end
     
     -- Get credit report from server
-    print('^3[ns-credit]^7 Requesting credit report for: ' .. citizenid)
-    
     local success, reportData = pcall(function()
         return lib.callback.await('ns-credit:server:getCreditReport', false, citizenid)
     end)
     
     if not success then
-        print('^1[ns-credit]^7 Error calling callback: ' .. tostring(reportData))
         lib.notify({
             title = 'Error',
             description = 'Failed to retrieve credit report: ' .. tostring(reportData),
@@ -251,10 +229,6 @@ RegisterNetEvent('ns-credit:client:openCreditReport', function(citizenid)
     end
     
     if reportData then
-        print('^2[ns-credit]^7 Credit report received, showing UI')
-        print('^3[ns-credit]^7 Report data - Name: ' .. reportData.firstname .. ' ' .. reportData.lastname .. ', Score: ' .. reportData.creditScore)
-        
-        -- Show a notification first to confirm we got here
         lib.notify({
             title = 'Credit Report',
             description = 'Loading credit report for ' .. reportData.firstname .. ' ' .. reportData.lastname,
@@ -263,15 +237,12 @@ RegisterNetEvent('ns-credit:client:openCreditReport', function(citizenid)
         
         ShowCreditReport(reportData)
     else
-        print('^1[ns-credit]^7 Failed to get credit report (returned nil)')
         lib.notify({
             title = 'Error',
             description = 'Failed to retrieve credit report. Player may not exist.',
             type = 'error'
         })
     end
-    
-    print('^2[ns-credit]^7 ===== CLIENT EVENT COMPLETE =====')
 end)
 
 -- NUI Callbacks
@@ -279,5 +250,3 @@ RegisterNUICallback('close', function(data, cb)
     SetNuiFocus(false, false)
     cb('ok')
 end)
-
-print('^2[ns-credit]^7 Client: Event handler registered for ns-credit:client:openCreditReport')
