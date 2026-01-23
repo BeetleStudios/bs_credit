@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Report</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="credit-report" class="credit-report-container" style="display: none;">
+        <div class="credit-report-header">
+            <div class="header-left">
+                <img src="logo.png" alt="Maze Bank" class="logo">
+                <h1>Credit Report</h1>
+            </div>
+            <button id="close-btn" class="close-btn">×</button>
+        </div>
+        
+        <div class="credit-report-content">
+            <!-- Personal Information Section -->
+            <div class="section personal-info">
+                <h2>Personal Information</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>First Name</label>
+                        <span id="firstname">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Last Name</label>
+                        <span id="lastname">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Date of Birth</label>
+                        <span id="birthdate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Citizen ID</label>
+                        <span id="citizenid">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Job Name</label>
+                        <span id="jobname">-</span>
+                    </div>
+                    <div class="info-item">
+                        <label>Job Grade</label>
+                        <span id="jobgrade">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Information Section -->
+            <div class="section financial-info">
+                <h2>Financial Information</h2>
+                <div class="financial-grid">
+                    <div class="financial-item">
+                        <label>Bank Balance</label>
+                        <span id="bank-balance" class="amount">$0.00</span>
+                    </div>
+                    <div class="financial-item credit-score">
+                        <label>Credit Score</label>
+                        <div class="score-container">
+                            <div class="score-meter-wrapper">
+                                <div class="score-meter"></div>
+                                <div class="score-range-labels">
+                                    <span class="range-label" data-range="300-499">
+                                        <span class="range-text">300-499</span>
+                                        <span class="score-indicator" id="score-indicator-1"></span>
+                                    </span>
+                                    <span class="range-label" data-range="500-600">
+                                        <span class="range-text">500-600</span>
+                                        <span class="score-indicator" id="score-indicator-2"></span>
+                                    </span>
+                                    <span class="range-label" data-range="601-660">
+                                        <span class="range-text">601-660</span>
+                                        <span class="score-indicator" id="score-indicator-3"></span>
+                                    </span>
+                                    <span class="range-label" data-range="661-780">
+                                        <span class="range-text">661-780</span>
+                                        <span class="score-indicator" id="score-indicator-4"></span>
+                                    </span>
+                                    <span class="range-label" data-range="781-850">
+                                        <span class="range-text">781-850</span>
+                                        <span class="score-indicator" id="score-indicator-5"></span>
+                                    </span>
+                                </div>
+                                <div class="current-score-display">
+                                    <span id="credit-score" class="score">0</span>
+                                    <span id="credit-status" class="status">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Credit History Section -->
+            <div class="section credit-history">
+                <h2>Credit History</h2>
+                <div id="history-list" class="history-list">
+                    <div class="no-history">No credit history available</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
