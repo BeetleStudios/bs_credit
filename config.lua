@@ -1,5 +1,8 @@
 Config = {}
 
+-- Framework: 'qbx_core' (Qbox) or 'qb-core' (QBCore)
+Config.Framework = 'qb-core'
+
 -- Base credit score for new players
 Config.BaseCreditScore = 650
 

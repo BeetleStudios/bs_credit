@@ -1,4 +1,4 @@
-# bs_credit - Qbox FiveM Script
+# bs_credit - FiveM Script
 
 A comprehensive credit score system for FiveM servers that allows bankers to view player credit reports and manage credit scores.
 
@@ -14,7 +14,7 @@ A comprehensive credit score system for FiveM servers that allows bankers to vie
 
 ## Dependencies
 
-1. qbox (qbx_core)
+1. **Framework**: Qbox or QBCore
 2. oxmysql
 3. ox_lib
 
@@ -39,6 +39,7 @@ A comprehensive credit score system for FiveM servers that allows bankers to vie
 ## Configuration
 
 Edit `config.lua` to customize:
+- `Config.Framework`: `'qbx_core'` (Qbox) or `'qb-core'` (QBCore) (default: 'qbx_core')
 - `Config.BaseCreditScore`: Default credit score for new players (default: 650)
 - `Config.BankerJob`: Job name required to access credit reports (default: 'banker')
 - `Config.MinCreditScore`: Minimum credit score value (default: 300)

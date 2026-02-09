@@ -1,6 +1,36 @@
+-- Framework compatibility: GetPlayer, GetPlayerByCitizenId, GetOfflinePlayer
+local Framework = Config.Framework == 'qb-core' and exports['qb-core']:GetCoreObject() or nil
+local function GetPlayer(source)
+    if Config.Framework == 'qbx_core' then
+        return exports.qbx_core:GetPlayer(source)
+    end
+    if Framework then
+        return Framework.Functions.GetPlayer(source)
+    end
+    return nil
+end
+local function GetPlayerByCitizenId(citizenid)
+    if Config.Framework == 'qbx_core' then
+        return exports.qbx_core:GetPlayerByCitizenId(citizenid)
+    end
+    if Framework then
+        return Framework.Functions.GetPlayerByCitizenId(citizenid)
+    end
+    return nil
+end
+local function GetOfflinePlayer(citizenid)
+    if Config.Framework == 'qbx_core' then
+        return exports.qbx_core:GetOfflinePlayer(citizenid)
+    end
+    if Framework then
+        return Framework.Functions.GetOfflinePlayerByCitizenId(citizenid)
+    end
+    return nil
+end
+
 -- Command handler function (defined early so RegisterCommand can use it)
 local function HandleCreditReportCommand(source, args, rawCommand)
-    local player = exports.qbx_core:GetPlayer(source)
+    local player = GetPlayer(source)
     if not player then 
         return 
     end
@@ -115,12 +145,11 @@ end
 
 -- Command handler for adding credit
 local function HandleAddCreditCommand(source, args, rawCommand)
-    local player = exports.qbx_core:GetPlayer(source)
+    local player = GetPlayer(source)
     if not player then 
         return 
     end
     
-    -- Parse arguments
     local citizenid = nil
     local amount = nil
     local description = nil
@@ -182,12 +211,11 @@ end
 
 -- Command handler for reducing credit
 local function HandleReduceCreditCommand(source, args, rawCommand)
-    local player = exports.qbx_core:GetPlayer(source)
+    local player = GetPlayer(source)
     if not player then 
         return 
     end
     
-    -- Parse arguments
     local citizenid = nil
     local amount = nil
     local description = nil
@@ -297,7 +325,7 @@ CreateThread(function()
             return nil
         end
         
-        local player = exports.qbx_core:GetPlayer(source)
+        local player = GetPlayer(source)
         if not player then
             return nil
         end
@@ -314,12 +342,12 @@ CreateThread(function()
         end
         
         -- Get player data by citizenid
-        local targetPlayer = exports.qbx_core:GetPlayerByCitizenId(citizenid)
+        local targetPlayer = GetPlayerByCitizenId(citizenid)
         local offlinePlayer = nil
         
         if not targetPlayer then
             -- Try to get offline player
-            offlinePlayer = exports.qbx_core:GetOfflinePlayer(citizenid)
+            offlinePlayer = GetOfflinePlayer(citizenid)
             if not offlinePlayer then
                 lib.notify(source, {
                     title = 'Error',
