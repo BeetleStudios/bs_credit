@@ -1,4 +1,4 @@
-# ns-credit - Qbox FiveM Script
+# bs_credit - Qbox FiveM Script
 
 A comprehensive credit score system for FiveM servers that allows bankers to view player credit reports and manage credit scores.
 
@@ -30,7 +30,7 @@ A comprehensive credit score system for FiveM servers that allows bankers to vie
 
 ## Installation
 
-1. Ensure ns-credit is in your `[standalone]` folder
+1. Ensure bs_credit is in your `[standalone]` folder
 2. Run the SQL script located in `sql.sql` to create the necessary tables
 3. Configure `Config.BankerJob` in `config.lua` to match your banker job name
 4. Set `Config.EnableCreditCommands` to `true` in `config.lua` if you want to enable the addcredit/reducecredit commands
@@ -47,10 +47,10 @@ Edit `config.lua` to customize:
 
 ## Exports
 
-- `exports['ns-credit']:GetCredit(citizenid)` - Returns the credit score for a citizenid
-- `exports['ns-credit']:getcredit(citizenid)` - Lowercase alias for GetCredit
-- `exports['ns-credit']:AddCredit(citizenid, amount, description)` - Adds credit score to a player
-- `exports['ns-credit']:ReduceCredit(citizenid, amount, description)` - Reduces credit score from a player
+- `exports['bs_credit']:GetCredit(citizenid)` - Returns the credit score for a citizenid
+- `exports['bs_credit']:getcredit(citizenid)` - Lowercase alias for GetCredit
+- `exports['bs_credit']:AddCredit(citizenid, amount, description)` - Adds credit score to a player
+- `exports['bs_credit']:ReduceCredit(citizenid, amount, description)` - Reduces credit score from a player
 
 ## Support
 

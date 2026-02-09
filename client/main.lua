@@ -182,7 +182,7 @@ local function ShowCreditReport(reportData)
 end
 
 -- Event to open credit report
-RegisterNetEvent('ns-credit:client:openCreditReport', function(citizenid)
+RegisterNetEvent('bs_credit:client:openCreditReport', function(citizenid)
     -- Wait for lib to be available (should already be available, but double-check)
     if not lib then
         local libWaitCount = 0
@@ -216,7 +216,7 @@ RegisterNetEvent('ns-credit:client:openCreditReport', function(citizenid)
     
     -- Get credit report from server
     local success, reportData = pcall(function()
-        return lib.callback.await('ns-credit:server:getCreditReport', false, citizenid)
+        return lib.callback.await('bs_credit:server:getCreditReport', false, citizenid)
     end)
     
     if not success then

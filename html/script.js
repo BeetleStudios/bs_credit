@@ -211,5 +211,5 @@ function GetParentResourceName() {
     } catch (e) {
         console.error('Error getting resource name:', e);
     }
-    return 'ns-credit'; // Fallback to default
+    return 'bs_credit'; // Fallback to default
 }

@@ -36,7 +36,7 @@ local function HandleCreditReportCommand(source, args, rawCommand)
     end
     
     -- If citizenid provided, use it; otherwise client will prompt
-    TriggerClientEvent('ns-credit:client:openCreditReport', source, citizenid)
+    TriggerClientEvent('bs_credit:client:openCreditReport', source, citizenid)
 end
 
 -- Helper function to get or create credit score
@@ -287,7 +287,7 @@ CreateThread(function()
     ]])
 
     -- Get full credit report (for UI)
-    lib.callback.register('ns-credit:server:getCreditReport', function(source, citizenid)
+    lib.callback.register('bs_credit:server:getCreditReport', function(source, citizenid)
         if not citizenid or citizenid == '' then
             lib.notify(source, {
                 title = 'Error',
