@@ -58,3 +58,10 @@ Edit `config.lua` to customize:
 For support, questions, or bug reports, please join our Discord server:
 
 [Discord Support Server](https://discord.gg/xSCBAYFwmY)
+
+## License
+
+- This resource is licensed under the GNU General Public License v3.0. See the [LICENSE](https://www.gnu.org/licenses/) file for more details.
+
+- The GNU General Public License does not permit incorporating your program
+into proprietary programs.
