@@ -1,13 +1,13 @@
 Config = {}
 
--- Framework: 'qbx_core' (Qbox) or 'qb-core' (QBCore)
+-- Framework: 'qbx_core' (Qbox), 'qb-core' (QBCore), or 'esx' (ESX Legacy)
 Config.Framework = 'qb-core'
 
 -- Base credit score for new players
 Config.BaseCreditScore = 650
 
--- Job name that can access credit reports (banker job)
-Config.BankerJob = 'banker' -- Change this to match your banker job name
+-- Job(s) that can access credit reports (single string or list of job names)
+Config.BankerJob = { 'banker', 'cardealer' }
 
 -- Minimum credit score
 Config.MinCreditScore = 300

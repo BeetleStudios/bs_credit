@@ -196,14 +196,16 @@ RegisterNetEvent('bs_credit:client:openCreditReport', function(citizenid)
     end
     
     if not citizenid or citizenid == '' then
-        -- Ask for citizenid if not provided
+        -- Ask for citizenid/SSN if not provided
+        local idLabel = Config.Framework == 'esx' and 'SSN' or 'Citizen ID'
+        local idPlaceholder = Config.Framework == 'esx' and 'XXX-XX-XXXX' or 'ABC12345'
         local input = lib.inputDialog('Credit Report', {
             {
                 type = 'input',
-                label = 'Citizen ID',
-                description = 'Enter the citizen ID to lookup',
+                label = idLabel,
+                description = 'Enter the ' .. idLabel:lower() .. ' to lookup',
                 required = true,
-                placeholder = 'ABC12345'
+                placeholder = idPlaceholder
             }
         })
         

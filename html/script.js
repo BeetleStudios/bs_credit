@@ -43,6 +43,8 @@ function displayCreditReport(data) {
     document.getElementById('firstname').textContent = data.firstname || '-';
     document.getElementById('lastname').textContent = data.lastname || '-';
     document.getElementById('birthdate').textContent = data.birthdate || '-';
+    const idLabelEl = document.getElementById('citizenid-label');
+    if (idLabelEl) idLabelEl.textContent = data.idLabel || 'Citizen ID';
     document.getElementById('citizenid').textContent = data.citizenid || '-';
     document.getElementById('jobname').textContent = data.jobName || '-';
     document.getElementById('jobgrade').textContent = data.jobGradeName || '-';
