@@ -1,11 +1,9 @@
--- Wait for ox_lib to be available
 CreateThread(function()
     -- Wait for ox_lib resource to be started
     while GetResourceState('ox_lib') ~= 'started' do
         Wait(100)
     end
     
-    -- Wait for lib to be available
     local attempts = 0
     while not lib do
         Wait(100)
@@ -16,24 +14,20 @@ CreateThread(function()
     end
 end)
 
--- Function to format currency
 local function FormatCurrency(amount)
     return '$' .. string.format("%.2f", amount)
 end
 
--- Function to format date
 local function FormatDate(dateString)
     if not dateString or dateString == 'Unknown' then
         return 'Unknown'
     end
-    -- If it's a timestamp string, try to format it
     if type(dateString) == 'string' and dateString:match('^%d+%-%d+%-%d+') then
         return dateString
     end
     return dateString
 end
 
--- Function to get credit score color
 local function GetCreditScoreColor(score)
     if score >= 750 then
         return 'green'
@@ -48,7 +42,6 @@ local function GetCreditScoreColor(score)
     end
 end
 
--- Function to get credit status text
 local function GetCreditStatus(score)
     if score >= 750 then
         return 'Excellent'
@@ -63,7 +56,6 @@ local function GetCreditStatus(score)
     end
 end
 
--- Function to show credit history
 local function ShowCreditHistory(history)
     if not history or #history == 0 then
         lib.notify({
@@ -76,7 +68,6 @@ local function ShowCreditHistory(history)
     
     local options = {}
     
-    -- Add back button first
     options[#options + 1] = {
         title = 'Back to Report',
         icon = 'arrow-left',
@@ -85,7 +76,6 @@ local function ShowCreditHistory(history)
         end
     }
     
-    -- Add history entries (most recent first)
     for i, entry in ipairs(history) do
         local changeAmount = tonumber(entry.change_amount) or 0
         local changeText = changeAmount > 0 and '+' .. changeAmount or tostring(changeAmount)
@@ -114,7 +104,6 @@ local function ShowCreditHistory(history)
     lib.showContext('credit_report_history')
 end
 
--- Function to show personal information
 local function ShowPersonalInfo(reportData)
     local options = {
         {
@@ -160,7 +149,6 @@ local function ShowPersonalInfo(reportData)
     lib.showContext('credit_report_personal')
 end
 
--- Function to display credit report using NUI
 local function ShowCreditReport(reportData)
     if not reportData then
         lib.notify({
@@ -181,7 +169,6 @@ local function ShowCreditReport(reportData)
     SetNuiFocus(true, true)
 end
 
--- Event to open credit report
 RegisterNetEvent('bs_credit:client:openCreditReport', function(citizenid)
     -- Wait for lib to be available (should already be available, but double-check)
     if not lib then
@@ -196,7 +183,6 @@ RegisterNetEvent('bs_credit:client:openCreditReport', function(citizenid)
     end
     
     if not citizenid or citizenid == '' then
-        -- Ask for citizenid/SSN if not provided
         local idLabel = Config.Framework == 'esx' and 'SSN' or 'Citizen ID'
         local idPlaceholder = Config.Framework == 'esx' and 'XXX-XX-XXXX' or 'ABC12345'
         local input = lib.inputDialog('Credit Report', {
@@ -216,7 +202,6 @@ RegisterNetEvent('bs_credit:client:openCreditReport', function(citizenid)
         citizenid = input[1]
     end
     
-    -- Get credit report from server
     local success, reportData = pcall(function()
         return lib.callback.await('bs_credit:server:getCreditReport', false, citizenid)
     end)
@@ -247,7 +232,6 @@ RegisterNetEvent('bs_credit:client:openCreditReport', function(citizenid)
     end
 end)
 
--- NUI Callbacks
 RegisterNUICallback('close', function(data, cb)
     SetNuiFocus(false, false)
     cb('ok')

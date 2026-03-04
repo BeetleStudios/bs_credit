@@ -32,4 +32,10 @@ dependencies {
     'ox_lib'
 }
 
+escrow_ignore {
+    'config.lua',
+    'client/main.lua',
+    'server/main.lua'
+}
+
 lua54 'yes'

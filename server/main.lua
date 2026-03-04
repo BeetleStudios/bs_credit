@@ -1,5 +1,3 @@
--- Framework compatibility: GetPlayer, GetPlayerByCitizenId, GetOfflinePlayer
--- All return a player object with .PlayerData = { job, money, charinfo } for credit report logic
 local QBCore = Config.Framework == 'qb-core' and exports['qb-core']:GetCoreObject() or nil
 local ESX = Config.Framework == 'esx' and GetResourceState('es_extended') == 'started' and exports['es_extended']:getSharedObject() or nil
 
@@ -9,11 +7,29 @@ local function GetESXGradeLabel(jobName, gradeLevel)
     return (row and row.label) or 'Unknown'
 end
 
+local function GetESXBankMoney(xPlayer)
+    if not xPlayer then return 0 end
+    local accounts = xPlayer.getAccounts and xPlayer.getAccounts() or {}
+    local bank = accounts.bank
+    if type(bank) == 'number' then
+        return bank
+    end
+    if type(bank) == 'table' and bank.money ~= nil then
+        return tonumber(bank.money) or 0
+    end
+    local acc = xPlayer.getAccount and xPlayer.getAccount('bank')
+    if acc then
+        if type(acc) == 'number' then return acc end
+        if type(acc) == 'table' and acc.money ~= nil then
+            return tonumber(acc.money) or 0
+        end
+    end
+    return 0
+end
+
 local function NormalizeESXPlayer(xPlayer)
     if not xPlayer then return nil end
     local job = xPlayer.getJob()
-    local accounts = xPlayer.getAccounts() or {}
-    local bankAccount = accounts.bank or {}
     local citizenid = (xPlayer.getSSN and xPlayer.getSSN()) or xPlayer.getIdentifier()
     local gradeLabel = (job and (job.name and job.grade ~= nil)) and GetESXGradeLabel(job.name, job.grade) or 'Unknown'
     return {
@@ -24,7 +40,7 @@ local function NormalizeESXPlayer(xPlayer)
                 label = job and job.label or 'Unknown',
                 grade = job and { name = gradeLabel } or nil
             },
-            money = { bank = (bankAccount.money or 0) },
+            money = { bank = GetESXBankMoney(xPlayer) },
             charinfo = {
                 firstname = xPlayer.get('firstname') or xPlayer.get('firstName') or 'Unknown',
                 lastname = xPlayer.get('lastname') or xPlayer.get('lastName') or 'Unknown',
@@ -96,8 +112,11 @@ local function GetOfflinePlayer(citizenid)
             accounts = type(row.accounts) == 'string' and json.decode(row.accounts) or row.accounts or {}
         end
         local bankMoney = 0
-        if accounts.bank then
-            bankMoney = type(accounts.bank) == 'table' and (accounts.bank.money or 0) or tonumber(accounts.bank) or 0
+        if accounts.bank ~= nil then
+            bankMoney = type(accounts.bank) == 'table' and (tonumber(accounts.bank.money) or 0) or tonumber(accounts.bank) or 0
+        end
+        if bankMoney == 0 and row.bank ~= nil then
+            bankMoney = tonumber(row.bank) or 0
         end
         local rowId = row.ssn
         local gradeLabel = GetESXGradeLabel(row.job, row.job_grade)
@@ -135,7 +154,6 @@ local function HasBankerJob(jobName)
     return false
 end
 
--- Command handler function (defined early so RegisterCommand can use it)
 local function HandleCreditReportCommand(source, args, rawCommand)
     local player = GetPlayer(source)
     if not player then 
@@ -163,7 +181,6 @@ local function HandleCreditReportCommand(source, args, rawCommand)
         return
     end
     
-    -- Parse citizenid from args (support both formats)
     local citizenid = nil
     if args and type(args) == 'table' then
         if args.citizenid then
@@ -173,7 +190,6 @@ local function HandleCreditReportCommand(source, args, rawCommand)
         end
     end
     
-    -- If citizenid provided, use it; otherwise client will prompt
     TriggerClientEvent('bs_credit:client:openCreditReport', source, citizenid)
 end
 
@@ -251,7 +267,6 @@ local function ReduceCreditScore(citizenid, amount, description)
     return true, newScore
 end
 
--- Command handler for adding credit
 local function HandleAddCreditCommand(source, args, rawCommand)
     local player = GetPlayer(source)
     if not player then 
@@ -317,7 +332,6 @@ local function HandleAddCreditCommand(source, args, rawCommand)
     end
 end
 
--- Command handler for reducing credit
 local function HandleReduceCreditCommand(source, args, rawCommand)
     local player = GetPlayer(source)
     if not player then 
@@ -383,16 +397,13 @@ local function HandleReduceCreditCommand(source, args, rawCommand)
     end
 end
 
--- Register commands immediately using RegisterCommand (doesn't need lib)
 RegisterCommand('creditreport', HandleCreditReportCommand, false)
 
--- Only register addcredit and reducecredit if enabled in config
 if Config.EnableCreditCommands then
     RegisterCommand('addcredit', HandleAddCreditCommand, false)
     RegisterCommand('reducecredit', HandleReduceCreditCommand, false)
 end
 
--- Wait for lib to be available
 CreateThread(function()
     while not lib do
         Wait(100)
@@ -422,7 +433,6 @@ CreateThread(function()
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ]])
 
-    -- Get full credit report (for UI)
     lib.callback.register('bs_credit:server:getCreditReport', function(source, citizenid)
         local idLabel = (Config.Framework == 'esx') and 'SSN' or 'Citizen ID'
         if not citizenid or citizenid == '' then
@@ -439,7 +449,6 @@ CreateThread(function()
             return nil
         end
         
-        -- Check if player has banker job
         local playerJob = player.PlayerData.job
         local jobName = playerJob and playerJob.name
         if not HasBankerJob(jobName) then
@@ -451,12 +460,10 @@ CreateThread(function()
             return nil
         end
         
-        -- Get player data by citizenid
         local targetPlayer = GetPlayerByCitizenId(citizenid)
         local offlinePlayer = nil
         
         if not targetPlayer then
-            -- Try to get offline player
             offlinePlayer = GetOfflinePlayer(citizenid)
             if not offlinePlayer then
                 lib.notify(source, {
@@ -472,12 +479,10 @@ CreateThread(function()
         local creditData = GetOrCreateCreditScore(citizenid)
         local creditHistory = GetCreditHistory(citizenid, 50)
         
-        -- Get bank balance
         local bankBalance = 0
         if targetPlayer then
             bankBalance = targetPlayer.PlayerData.money.bank or 0
         else
-            -- Offline: use PlayerData (ESX builds this in GetOfflinePlayer)
             bankBalance = (playerData.money and playerData.money.bank) or 0
             if bankBalance == 0 and Config.Framework ~= 'esx' then
                 local moneyData = MySQL.single.await('SELECT money FROM players WHERE citizenid = ?', { citizenid })
@@ -487,8 +492,8 @@ CreateThread(function()
                 end
             end
         end
+        bankBalance = math.floor(tonumber(bankBalance) or 0)
         
-        -- Get job information
         local jobName = 'Unknown'
         local jobGradeName = 'Unknown'
         if playerData.job then
@@ -512,7 +517,6 @@ CreateThread(function()
         }
     end)
 
-    -- Also register using lib.addCommand (for better integration and chat suggestions)
     local idLabelParam = (Config.Framework == 'esx') and 'SSN' or 'Citizen ID'
     lib.addCommand('creditreport', {
         help = 'Run a credit report for a player',
@@ -526,7 +530,6 @@ CreateThread(function()
         }
     }, HandleCreditReportCommand)
     
-    -- Only register addcredit and reducecredit if enabled in config
     if Config.EnableCreditCommands then
         lib.addCommand('addcredit', {
             help = 'Add credit score to a player',
