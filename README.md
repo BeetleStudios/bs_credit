@@ -13,6 +13,8 @@ NUI redone with React + Vite + Mantine
 - **Credit Management**: Optional commands to add or reduce credit scores with custom descriptions
 - **Job-Based Access**: Restrict credit report access to specific job (banker)
 - **Export Functions**: Exportable functions for other scripts to interact with the credit system
+<img width="465" height="683" alt="creditdark" src="https://github.com/user-attachments/assets/12aee030-8edc-4492-8179-5bf4cbb2d371" /><img width="465" height="683" alt="creditlight" src="https://github.com/user-attachments/assets/5e23b70c-22bd-4ff0-8717-70f37adb6e3d" />
+
 
 ## Dependencies
 
