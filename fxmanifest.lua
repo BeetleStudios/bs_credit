@@ -1,6 +1,10 @@
 fx_version 'cerulean'
 games { 'gta5' }
 
+author 'Beetle Studios'
+description 'Credit Report System'
+version '2.0.0'
+
 shared_script '@ox_lib/init.lua'
 
 shared_script { 'config.lua' }
@@ -14,18 +18,21 @@ server_scripts {
     'server/main.lua',
 }
 
-ui_page 'html/index.html'
+ui_page 'html/dist/index.html'
 
 files {
-    'html/index.html',
-    'html/style.css',
-    'html/script.js',
-    'html/logo.png'
+    'html/dist/**',
 }
 
 dependencies {
     'oxmysql',
     'ox_lib'
+}
+
+escrow_ignore {
+    'config.lua',
+    'client/main.lua',
+    'server/main.lua'
 }
 
 lua54 'yes'

@@ -43,12 +43,14 @@ function displayCreditReport(data) {
     document.getElementById('firstname').textContent = data.firstname || '-';
     document.getElementById('lastname').textContent = data.lastname || '-';
     document.getElementById('birthdate').textContent = data.birthdate || '-';
+    const idLabelEl = document.getElementById('citizenid-label');
+    if (idLabelEl) idLabelEl.textContent = data.idLabel || 'Citizen ID';
     document.getElementById('citizenid').textContent = data.citizenid || '-';
     document.getElementById('jobname').textContent = data.jobName || '-';
     document.getElementById('jobgrade').textContent = data.jobGradeName || '-';
     
-    // Financial Information
-    const bankBalance = formatCurrency(data.bankBalance || 0);
+    // Financial Information (bank balance shown as whole dollars, no decimals)
+    const bankBalance = formatCurrencyInteger(data.bankBalance || 0);
     document.getElementById('bank-balance').textContent = bankBalance;
     
     const creditScore = data.creditScore || 0;
@@ -68,6 +70,11 @@ function displayCreditReport(data) {
 
 function formatCurrency(amount) {
     return '$' + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+}
+
+function formatCurrencyInteger(amount) {
+    const n = Math.floor(Number(amount) || 0);
+    return '$' + n.toLocaleString();
 }
 
 function getCreditStatus(score) {
@@ -190,13 +197,11 @@ function formatDate(dateString) {
 }
 
 function GetParentResourceName() {
-    // Get resource name from the current URL
     const path = window.location.pathname;
     const match = path.match(/\/([^\/]+)\/html\/index\.html/);
     if (match) {
         return match[1];
     }
-    // Fallback: try to get from script src
     try {
         const scripts = document.getElementsByTagName('script');
         for (let i = 0; i < scripts.length; i++) {
@@ -211,5 +216,5 @@ function GetParentResourceName() {
     } catch (e) {
         console.error('Error getting resource name:', e);
     }
-    return 'bs_credit'; // Fallback to default
+    return 'bs_credit';
 }

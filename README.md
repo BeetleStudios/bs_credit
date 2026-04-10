@@ -2,6 +2,8 @@
 
 A comprehensive credit score system for FiveM servers that allows bankers to view player credit reports and manage credit scores.
 
+NUI redone with React + Vite + Mantine
+
 ## Features
 
 - **Credit Reports**: Bankers can view detailed credit reports for any player including personal information, bank balance, and credit score
@@ -14,17 +16,17 @@ A comprehensive credit score system for FiveM servers that allows bankers to vie
 
 ## Dependencies
 
-1. **Framework**: Qbox or QBCore
+1. **Framework**: Qbox, QBCore, or ESX
 2. oxmysql
 3. ox_lib
 
 ## Usage
 
-1. **Viewing Credit Reports**: Bankers can use `/creditreport [citizenid]` to view a player's credit report
+1. **Viewing Credit Reports**: Bankers can use `/creditreport [citizenid]` to view a player's credit report (use SSN for ESX)
 2. **Credit Report UI**: Opens a detailed NUI showing:
    - Personal information (name, date of birth, job)
    - Current bank balance
-   - Credit score with visual meter
+   - Credit score line chart
    - Complete credit history with dates and descriptions
 3. **Managing Credit Scores** (if enabled): Use `/addcredit [citizenid] [amount] [description]` or `/reducecredit [citizenid] [amount] [description]` to adjust scores
 
@@ -32,16 +34,16 @@ A comprehensive credit score system for FiveM servers that allows bankers to vie
 
 1. Ensure bs_credit is in your `[standalone]` folder
 2. Run the SQL script located in `sql.sql` to create the necessary tables
-3. Configure `Config.BankerJob` in `config.lua` to match your banker job name
+3. Configure `Config.BankerJob` in `config.lua` to match your banker job name(s) (string or table of job names)
 4. Set `Config.EnableCreditCommands` to `true` in `config.lua` if you want to enable the addcredit/reducecredit commands
 5. Logo can be swapped out with same name in `html/logo.png`
 
 ## Configuration
 
 Edit `config.lua` to customize:
-- `Config.Framework`: `'qbx_core'` (Qbox) or `'qb-core'` (QBCore) (default: 'qbx_core')
+- `Config.Framework`: `'qbx_core'` (Qbox), `'qb-core'` (QBCore), or `'esx'` (ESX Legacy) (default: 'qbx_core')
 - `Config.BaseCreditScore`: Default credit score for new players (default: 650)
-- `Config.BankerJob`: Job name required to access credit reports (default: 'banker')
+- `Config.BankerJob`: Job name(s) that can access credit reports — single string or table, e.g. `'banker'` or `{ 'banker', 'loan_officer' }` (default: `{ 'banker' }`)
 - `Config.MinCreditScore`: Minimum credit score value (default: 300)
 - `Config.MaxCreditScore`: Maximum credit score value (default: 850)
 - `Config.EnableCreditCommands`: Enable/disable addcredit and reducecredit commands (default: false)

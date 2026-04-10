@@ -1,0 +1,57 @@
+html,
+body,
+#root {
+  margin: 0;
+  background: transparent !important;
+  overflow: hidden;
+}
+
+/* Credit history: slim rounded scrollbar (WebKit / CEF + Firefox) */
+#bs-credit-mantine-scope .bs-credit-history-scroll {
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+}
+
+#bs-credit-mantine-scope[data-mantine-color-scheme='light'] .bs-credit-history-scroll {
+  scrollbar-color: rgba(0, 0, 0, 0.28) transparent;
+}
+
+#bs-credit-mantine-scope[data-mantine-color-scheme='dark'] .bs-credit-history-scroll {
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+#bs-credit-mantine-scope .bs-credit-history-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+#bs-credit-mantine-scope .bs-credit-history-scroll::-webkit-scrollbar-track {
+  margin: 4px 0;
+  background: transparent;
+  border-radius: 999px;
+}
+
+#bs-credit-mantine-scope[data-mantine-color-scheme='light']
+  .bs-credit-history-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.22);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#bs-credit-mantine-scope[data-mantine-color-scheme='light']
+  .bs-credit-history-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.35);
+}
+
+#bs-credit-mantine-scope[data-mantine-color-scheme='dark']
+  .bs-credit-history-scroll::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+#bs-credit-mantine-scope[data-mantine-color-scheme='dark']
+  .bs-credit-history-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(255, 255, 255, 0.45);
+}
