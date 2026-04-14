@@ -27,15 +27,7 @@ const MANTINE_SCOPE_ID = 'bs-credit-mantine-scope';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <div
-      id={MANTINE_SCOPE_ID}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'transparent',
-        pointerEvents: 'none',
-      }}
-    >
+    <div id={MANTINE_SCOPE_ID}>
       <MantineProvider
         theme={theme}
         defaultColorScheme="light"
