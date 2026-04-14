@@ -97,7 +97,7 @@ export function App() {
         alignItems: 'center',
         justifyContent: 'center',
         pointerEvents: 'auto',
-        background: 'rgba(0, 0, 0, 0.35)',
+        background: 'transparent',
         zIndex: 1000,
       }}
     >
