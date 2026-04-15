@@ -15,7 +15,7 @@ import {
   Title,
   useMantineColorScheme,
 } from '@mantine/core';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import type { CreditReport } from './creditUtils';
 import {
   buildScoreTimeline,
@@ -32,24 +32,49 @@ const LOGO_SRC = `${import.meta.env.BASE_URL}logo.png`;
 
 type NuiMessage = { action: 'open'; report: CreditReport } | { action: 'close' };
 
-function closeReport() {
-  fetch(`https://${getParentResourceName()}/close`, {
+export type AppProps = {
+  /** Passed from shell on first boot so the first paint is not "closed" under Mantine (FiveM CEF black frame). */
+  initialOpenMessage?: Extract<NuiMessage, { action: 'open' }> | null;
+};
+
+function initialStateFromMessage(msg: AppProps['initialOpenMessage']) {
+  if (msg?.action === 'open' && msg.report) {
+    return { open: true as const, report: msg.report };
+  }
+  return { open: false as const, report: null as CreditReport | null };
+}
+
+function closeReportNui(): Promise<void> {
+  return fetch(`https://${getParentResourceName()}/close`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({}),
-  });
+  })
+    .then(() => undefined)
+    .catch(() => undefined);
 }
 
-export function App() {
-  const [open, setOpen] = useState(false);
-  const [report, setReport] = useState<CreditReport | null>(null);
+let reloadToShellScheduled = false;
+
+/** Mantine + CEF leave composited black plates until styles are torn down; full reload returns to the thin shell (main.tsx). */
+async function reloadNuiToShell(): Promise<void> {
+  if (reloadToShellScheduled) return;
+  reloadToShellScheduled = true;
+  await closeReportNui();
+  window.location.reload();
+}
+
+export function App({ initialOpenMessage = null }: AppProps) {
+  const initial = useMemo(() => initialStateFromMessage(initialOpenMessage), [initialOpenMessage]);
+  const [open, setOpen] = useState(initial.open);
+  const [report, setReport] = useState<CreditReport | null>(initial.report);
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const isDark = colorScheme === 'dark';
 
   const handleClose = useCallback(() => {
     setOpen(false);
     setReport(null);
-    closeReport();
+    void reloadNuiToShell();
   }, []);
 
   useEffect(() => {
@@ -62,6 +87,7 @@ export function App() {
       } else if (data.action === 'close') {
         setOpen(false);
         setReport(null);
+        void reloadNuiToShell();
       }
     };
     window.addEventListener('message', onMessage);
@@ -77,6 +103,70 @@ export function App() {
     return () => document.removeEventListener('keydown', onKey);
   }, [open, handleClose]);
 
+  /*
+   * FiveM CEF: keep the *entire* document transparent while open. Mantine + dark `color-scheme`
+   * can otherwise paint a full-frame black plate behind the centered Paper (even with no dimmer div).
+   */
+  useLayoutEffect(() => {
+    if (!open) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+    const prev = {
+      htmlBg: html.style.backgroundColor,
+      bodyBg: body.style.backgroundColor,
+      rootBg: root?.style.backgroundColor ?? '',
+      colorScheme: html.style.colorScheme,
+    };
+
+    const style = document.createElement('style');
+    style.id = 'bs-credit-open-transparency';
+    style.textContent = `
+      html, body, #root {
+        background: transparent !important;
+        background-color: transparent !important;
+        background-image: none !important;
+        min-height: 0 !important;
+      }
+      #root { height: auto !important; }
+      html, body { color-scheme: normal !important; }
+    `;
+    document.head.appendChild(style);
+
+    html.style.setProperty('background', 'transparent', 'important');
+    html.style.setProperty('background-color', 'transparent', 'important');
+    body.style.setProperty('background', 'transparent', 'important');
+    body.style.setProperty('background-color', 'transparent', 'important');
+    html.style.setProperty('color-scheme', 'normal', 'important');
+    body.style.setProperty('color-scheme', 'normal', 'important');
+    if (root) {
+      root.style.setProperty('background', 'transparent', 'important');
+      root.style.setProperty('background-color', 'transparent', 'important');
+      root.style.setProperty('min-height', '0', 'important');
+      root.style.setProperty('height', 'auto', 'important');
+    }
+
+    return () => {
+      style.remove();
+      html.style.backgroundColor = prev.htmlBg;
+      html.style.removeProperty('background');
+      html.style.removeProperty('background-color');
+      html.style.colorScheme = prev.colorScheme;
+      html.style.removeProperty('color-scheme');
+      body.style.backgroundColor = prev.bodyBg;
+      body.style.removeProperty('background');
+      body.style.removeProperty('background-color');
+      body.style.removeProperty('color-scheme');
+      if (root) {
+        root.style.backgroundColor = prev.rootBg;
+        root.style.removeProperty('background');
+        root.style.removeProperty('background-color');
+        root.style.removeProperty('min-height');
+        root.style.removeProperty('height');
+      }
+    };
+  }, [open]);
+
   const chartData = useMemo(() => {
     if (!report) return [];
     return buildScoreTimeline(report.creditScore, report.creditHistory ?? [], HISTORY_CHART_LIMIT);
@@ -88,34 +178,33 @@ export function App() {
     return null;
   }
 
+  /*
+   * No full-screen dimmer. Avoid translate(-50%,-50%): promoted layers + CEF often show black outside the card.
+   * Center with calc() only.
+   */
   return (
-    <Box
+    <Paper
+      shadow="none"
+      radius="sm"
+      withBorder
+      mih={400}
+      h="92vh"
+      mah="92vh"
+      styles={{ root: { boxShadow: 'none' } }}
       style={{
         position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        pointerEvents: 'auto',
-        background: 'transparent',
+        top: 'calc((100vh - 92vh) / 2)',
+        left: 'calc((100vw - min(880px, 94vw)) / 2)',
+        width: 'min(880px, 94vw)',
+        maxWidth: '94vw',
         zIndex: 1000,
+        pointerEvents: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        willChange: 'auto',
       }}
     >
-      <Paper
-        shadow="xl"
-        radius="sm"
-        withBorder
-        w={880}
-        maw="94vw"
-        mih={400}
-        h="92vh"
-        mah="92vh"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}
-      >
         <Box
           px="lg"
           py="md"
@@ -134,7 +223,7 @@ export function App() {
                 alt="Maze Bank"
                 w={50}
                 h={50}
-                style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.35))' }}
+                style={{ objectFit: 'contain' }}
               />
               <Title
                 order={2}
@@ -200,7 +289,7 @@ export function App() {
                 Financial summary
               </Text>
               <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                <Paper withBorder p="md" radius="sm">
+                <Paper withBorder p="md" radius="sm" shadow="none">
                   <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
                     Bank balance
                   </Text>
@@ -208,7 +297,7 @@ export function App() {
                     {formatCurrencyInteger(report.bankBalance)}
                   </Text>
                 </Paper>
-                <Paper withBorder p="md" radius="sm">
+                <Paper withBorder p="md" radius="sm" shadow="none">
                   <Group justify="space-between" align="flex-start" wrap="nowrap">
                     <Box>
                       <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
@@ -241,6 +330,7 @@ export function App() {
                 </Text>
                 <Box
                   style={{
+                    backgroundColor: 'transparent',
                     // Inherit into Mantine charts (scoped color scheme can miss default chart theme selectors)
                     ['--chart-text-color' as string]: 'var(--mantine-color-text)',
                     ['--chart-grid-color' as string]: isDark
@@ -257,6 +347,7 @@ export function App() {
                     withDots
                     withLegend={false}
                     gridAxis="xy"
+                    style={{ backgroundColor: 'transparent' }}
                     tooltipProps={{
                     content: ({ label, payload }) => (
                       <ChartTooltip
@@ -335,14 +426,13 @@ export function App() {
             Close
           </Button>
         </Flex>
-      </Paper>
-    </Box>
+    </Paper>
   );
 }
 
 function InfoField({ label, value }: { label: string; value: string }) {
   return (
-    <Paper withBorder p="sm" radius="sm">
+    <Paper withBorder p="sm" radius="sm" shadow="none">
       <Text size="xs" c="dimmed" tt="uppercase" fw={600}>
         {label}
       </Text>

@@ -1,9 +1,48 @@
+/*
+ * :root — Mantine's bundled rule is `body { background-color: var(--mantine-color-body) }`.
+ * Variables on #bs-credit-mantine-scope do not apply to `body`; set them here so the CEF layer stays see-through.
+ */
+:root {
+  --mantine-color-body: transparent !important;
+}
+
+/*
+ * FiveM CEF: backdrop-filter on a transparent page composites as solid black (no backdrop to sample).
+ * Mantine components may use it; strip it globally for this NUI.
+ */
+*,
+*::before,
+*::after {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
 html,
 body,
-#root {
+#root,
+#bs-credit-mantine-scope {
   margin: 0;
   background: transparent !important;
+  background-color: transparent !important;
   overflow: hidden;
+}
+
+html,
+body,
+#root,
+#bs-credit-mantine-scope {
+  pointer-events: none;
+}
+
+#bs-credit-mantine-scope {
+  min-height: 0;
+  height: auto;
+}
+
+#root:empty {
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Credit history: slim rounded scrollbar (WebKit / CEF + Firefox) */

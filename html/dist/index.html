@@ -10,11 +10,41 @@
         background: transparent !important;
         overflow: hidden;
       }
+      *,
+      *::before,
+      *::after {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
     </style>
-    <script type="module" crossorigin src="./assets/index-D6O7WDdx.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-D5glV6k2.css">
+    <script type="module" crossorigin src="./assets/index-CV82qhfd.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-b_Y-iLo0.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"></div>
+    <!-- After Mantine runtime styles in <head>: keeps the game visible when the report UI is closed. -->
+    <style>
+      :root {
+        --mantine-color-body: transparent !important;
+      }
+      html,
+      body,
+      #root,
+      #bs-credit-mantine-scope {
+        background: transparent !important;
+        background-color: transparent !important;
+      }
+      html,
+      body,
+      #root,
+      #bs-credit-mantine-scope {
+        pointer-events: none;
+      }
+      #root:empty {
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+      }
+    </style>
   </body>
 </html>

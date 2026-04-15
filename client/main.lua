@@ -14,6 +14,11 @@ CreateThread(function()
     end
 end)
 
+AddEventHandler('onClientResourceStart', function(resourceName)
+    if resourceName ~= GetCurrentResourceName() then return end
+    SetNuiFocus(false, false)
+end)
+
 local function FormatCurrency(amount)
     return '$' .. string.format("%.2f", amount)
 end

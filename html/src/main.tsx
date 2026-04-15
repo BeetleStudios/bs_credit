@@ -1,42 +1,48 @@
-import '@mantine/core/styles.css';
-import '@mantine/charts/styles.css';
-import { MantineProvider, createTheme, localStorageColorSchemeManager } from '@mantine/core';
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import { App } from './App';
-import './index.css';
+/**
+ * Thin FiveM NUI entry: no Mantine/React until the first credit report `open`
+ * message, so this resource does not paint a full-viewport layer over the game
+ * while idle (other resources' UIs stack above us).
+ */
+import './shell.css';
 
-const theme = createTheme({
-  primaryColor: 'red',
-  defaultRadius: 'sm',
-  components: {
-    Table: {
-      styles: {
-        td: { color: 'var(--mantine-color-text)' },
-        th: { color: 'var(--mantine-color-dimmed)' },
-      },
-    },
-  },
+const openQueue: unknown[] = [];
+let bootPromise: Promise<void> | null = null;
+let booted = false;
+
+window.addEventListener('message', function onMessage(e: MessageEvent) {
+  if (booted) return;
+
+  const data = e.data;
+  if (!data || typeof data !== 'object') return;
+  if ((data as { action?: string }).action !== 'open') return;
+
+  openQueue.push(data);
+
+  if (!bootPromise) {
+    bootPromise = import('./creditApp')
+      .then(({ mountCreditUi }) => {
+        const batch = openQueue.splice(0, openQueue.length);
+        const lastOpen = [...batch]
+          .reverse()
+          .find(
+            (d) =>
+              d &&
+              typeof d === 'object' &&
+              (d as { action?: string }).action === 'open' &&
+              (d as { report?: unknown }).report,
+          );
+        booted = true;
+        window.removeEventListener('message', onMessage);
+        mountCreditUi(lastOpen ?? null);
+        /* Re-dispatch so any listeners still see the same sequence; first paint already has data from initialOpenMessage. */
+        requestAnimationFrame(() => {
+          for (const data of batch) {
+            window.dispatchEvent(new MessageEvent('message', { data }));
+          }
+        });
+      })
+      .catch(() => {
+        bootPromise = null;
+      });
+  }
 });
-
-const colorSchemeManager = localStorageColorSchemeManager({
-  key: 'bs-credit-color-scheme',
-});
-
-const MANTINE_SCOPE_ID = 'bs-credit-mantine-scope';
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <div id={MANTINE_SCOPE_ID}>
-      <MantineProvider
-        theme={theme}
-        defaultColorScheme="light"
-        colorSchemeManager={colorSchemeManager}
-        getRootElement={() => document.getElementById(MANTINE_SCOPE_ID) ?? undefined}
-        cssVariablesSelector={`#${MANTINE_SCOPE_ID}`}
-      >
-        <App />
-      </MantineProvider>
-    </div>
-  </React.StrictMode>
-);
